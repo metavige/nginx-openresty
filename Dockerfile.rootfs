@@ -1,0 +1,34 @@
+# Dockerfile for building rootfs.tar.gz
+#
+# USAGE:
+#   $ docker build  -t nginx.rootfs  -f Dockerfile.rootfs  .
+#   $ docker run --rm -v $(pwd):/data  nginx.rootfs
+#
+# Version  1.0
+#
+
+# pull base image
+FROM debian:jessie
+MAINTAINER Ricky Chiang <metaivge@gmail.com>
+
+ENV VER 1.9.3.1
+
+# install toolchain for building...
+RUN DEBIAN_FRONTEND=noninteractive  && \
+	echo " ===> Install curl and helper tools, libs ....." && \
+	apt-get update && \
+	apt-get install -y curl make gcc perl libreadline-dev libncurses5-dev libpcre3-dev libssl-dev libgd2-xpm-dev wget && \
+	curl -L http://openresty.org/download/ngx_openresty-$VER.tar.gz | tar zxv && \
+	mv ngx_openresty-$VER ngx_openresty
+
+# install extract-elf-so
+RUN curl -sSL http://bit.ly/install-extract-elf-so | bash
+
+WORKDIR /tmp
+COPY . /tmp
+# RUN     ./build-rootfs.sh
+
+# copy generated rootfs tarball...
+VOLUME [ "/data" ]
+# CMD ["cp", "rootfs.tar.gz", "/usr/sbin/nginx", "/data/"]
+CMD ["./build-rootfs.sh"]
